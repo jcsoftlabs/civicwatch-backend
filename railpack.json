@@ -8,8 +8,7 @@
     "build": {
       "inputs": [
         {
-          "step": "install",
-          "include": ["."]
+          "step": "install"
         }
       ],
       "commands": ["npm run build"]

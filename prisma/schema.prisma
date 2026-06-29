@@ -125,6 +125,7 @@ model Organization {
   mentions             Mention[]
   alerts               Alert[]
   notificationChannels NotificationChannel[]
+  rssSources           RssSource[]
   reports              Report[]
   auditLogs            AuditLog[]
 }
@@ -257,6 +258,23 @@ model Report {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, periodStart, periodEnd])
+}
+
+model RssSource {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  name                 String
+  feedUrl              String
+  websiteUrl           String?
+  active               Boolean      @default(true)
+  checkIntervalMinutes Int          @default(15)
+  lastCheckedAt        DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, active])
 }
 
 model AuditLog {

@@ -19,6 +19,7 @@ async function main() {
   await prisma.alert.deleteMany();
   await prisma.report.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.rssSource.deleteMany();
   await prisma.keyword.deleteMany();
   await prisma.notificationChannel.deleteMany();
   await prisma.mention.deleteMany();
@@ -103,6 +104,43 @@ async function main() {
         label: 'WhatsApp cellule crise',
         destination: '+50937000000',
         active: true,
+      },
+    ],
+  });
+
+  await prisma.rssSource.createMany({
+    data: [
+      {
+        organizationId: organization.id,
+        name: 'Le Nouvelliste',
+        feedUrl: 'https://example.com/rss/le-nouvelliste.xml',
+        websiteUrl: 'https://lenouvelliste.com',
+        active: false,
+        checkIntervalMinutes: 15,
+      },
+      {
+        organizationId: organization.id,
+        name: 'Haiti Libre',
+        feedUrl: 'https://example.com/rss/haiti-libre.xml',
+        websiteUrl: 'https://haitilibre.com',
+        active: false,
+        checkIntervalMinutes: 15,
+      },
+      {
+        organizationId: organization.id,
+        name: 'AlterPresse',
+        feedUrl: 'https://example.com/rss/alterpresse.xml',
+        websiteUrl: 'https://www.alterpresse.org',
+        active: false,
+        checkIntervalMinutes: 30,
+      },
+      {
+        organizationId: organization.id,
+        name: 'Satellite 509',
+        feedUrl: 'https://example.com/rss/satellite509.xml',
+        websiteUrl: 'https://satellite509.com',
+        active: false,
+        checkIntervalMinutes: 30,
       },
     ],
   });

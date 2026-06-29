@@ -5,6 +5,28 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
+function parseCorsOrigins(corsOrigin: string): string[] {
+  return corsOrigin
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
+  return allowedOrigins.some((allowedOrigin) => {
+    if (allowedOrigin === '*') {
+      return true;
+    }
+
+    if (allowedOrigin.startsWith('*.')) {
+      const domain = allowedOrigin.slice(2);
+      return origin === `https://${domain}` || origin.endsWith(`.${domain}`);
+    }
+
+    return origin === allowedOrigin;
+  });
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: false,
@@ -14,10 +36,23 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 4000);
   const apiPrefix = configService.get<string>('API_PREFIX');
   const swaggerPath = configService.get<string>('SWAGGER_PATH', 'docs');
-  const corsOrigin = configService.get<string>('CORS_ORIGIN', 'http://localhost:3000');
+  const corsOrigin = configService.get<string>(
+    'CORS_ORIGIN',
+    'http://localhost:3000,https://*.vercel.app',
+  );
+  const allowedOrigins = parseCorsOrigins(corsOrigin);
 
   app.enableCors({
-    origin: corsOrigin.split(',').map((origin) => origin.trim()),
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || isOriginAllowed(origin, allowedOrigins)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`), false);
+    },
     credentials: true,
   });
 

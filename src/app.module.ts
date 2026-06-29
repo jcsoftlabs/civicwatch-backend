@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AlertsModule } from './alerts/alerts.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
@@ -14,6 +15,7 @@ import { MonitoredProfilesModule } from './monitored-profiles/monitored-profiles
 import { OrganizationsModule } from './organizations/organizations.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReportsModule } from './reports/reports.module';
+import { RssModule } from './rss/rss.module';
 import { UsersModule } from './users/users.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -43,6 +45,7 @@ import { RolesGuard } from './common/guards/roles.guard';
         },
       }),
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -53,6 +56,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     AlertsModule,
     DashboardModule,
     ReportsModule,
+    RssModule,
     AuditLogsModule,
     HealthModule,
   ],

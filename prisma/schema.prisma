@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum OrganizationType {
+  POLITICIAN
+  COMPANY
+  PARTY
+  NGO
+  OTHER
+}
+
+enum OrganizationRole {
+  SUPER_ADMIN
+  ORG_ADMIN
+  ANALYST
+  VIEWER
+}
+
+enum ProfileType {
+  PERSON
+  COMPANY
+  POLITICAL_PARTY
+  BRAND
+  OTHER
+}
+
+enum KeywordType {
+  NAME
+  COMPANY
+  PARTY
+  HASHTAG
+  ALIAS
+  SENSITIVE_TOPIC
+  OTHER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Platform {
+  X
+  FACEBOOK
+  INSTAGRAM
+  WEB
+  RSS
+  NEWS
+  CRAWLER
+  MANUAL
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  UNKNOWN
+}
+
+enum MentionStatus {
+  NEW
+  REVIEWING
+  RESOLVED
+  IGNORED
+}
+
+enum AlertType {
+  EMAIL
+  SMS
+  WHATSAPP
+  TELEGRAM
+  IN_APP
+}
+
+enum NotificationChannelType {
+  EMAIL
+  SMS
+  WHATSAPP
+  TELEGRAM
+}
+
+enum AlertStatus {
+  PENDING
+  SENT
+  FAILED
+  ACKNOWLEDGED
+}
+
+model User {
+  id              String               @id @default(cuid())
+  fullName        String
+  email           String               @unique
+  passwordHash    String
+  status          UserStatus           @default(ACTIVE)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  organizationMembers OrganizationMember[]
+  auditLogs       AuditLog[]
+}
+
+model Organization {
+  id                   String               @id @default(cuid())
+  name                 String
+  slug                 String               @unique
+  type                 OrganizationType
+  country              String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  members              OrganizationMember[]
+  monitoredProfiles    MonitoredProfile[]
+  keywords             Keyword[]
+  mentions             Mention[]
+  alerts               Alert[]
+  notificationChannels NotificationChannel[]
+  reports              Report[]
+  auditLogs            AuditLog[]
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrganizationRole
+  createdAt      DateTime         @default(now())
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model MonitoredProfile {
+  id             String       @id @default(cuid())
+  organizationId String
+  displayName    String
+  profileType    ProfileType
+  description    String?
+  country        String
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  keywords       Keyword[]
+  mentions       Mention[]
+
+  @@index([organizationId])
+}
+
+model Keyword {
+  id                 String            @id @default(cuid())
+  organizationId     String
+  monitoredProfileId String?
+  keyword            String
+  keywordType        KeywordType
+  priority           Priority
+  platforms          Json
+  active             Boolean           @default(true)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  monitoredProfile   MonitoredProfile? @relation(fields: [monitoredProfileId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([monitoredProfileId])
+}
+
+model Mention {
+  id                 String            @id @default(cuid())
+  organizationId     String
+  monitoredProfileId String?
+  platform           Platform
+  sourceName         String
+  externalId         String?
+  authorName         String?
+  authorHandle       String?
+  title              String?
+  content            String
+  url                String?
+  matchedKeywords    Json
+  sentiment          Sentiment         @default(UNKNOWN)
+  priority           Priority
+  status             MentionStatus     @default(NEW)
+  detectedAt         DateTime
+  publishedAt        DateTime?
+  engagement         Json?
+  rawJson            Json?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  monitoredProfile   MonitoredProfile? @relation(fields: [monitoredProfileId], references: [id], onDelete: SetNull)
+  alerts             Alert[]
+
+  @@index([organizationId, detectedAt])
+  @@index([platform])
+  @@index([status])
+  @@index([priority])
+}
+
+model Alert {
+  id             String       @id @default(cuid())
+  organizationId String
+  mentionId      String
+  alertType      AlertType
+  severity       Priority
+  title          String
+  message        String
+  status         AlertStatus  @default(PENDING)
+  sentAt         DateTime?
+  acknowledgedAt DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  mention        Mention      @relation(fields: [mentionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([mentionId])
+}
+
+model NotificationChannel {
+  id             String       @id @default(cuid())
+  organizationId String
+  type           NotificationChannelType
+  label          String
+  destination    String
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  organizationId String
+  title          String
+  periodStart    DateTime
+  periodEnd      DateTime
+  summary        String
+  metrics        Json
+  recommendations Json
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, periodStart, periodEnd])
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String?
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       Json
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime      @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+}

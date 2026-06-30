@@ -10,7 +10,8 @@
     "start:prod": "node dist/src/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "client:fritz": "tsx prisma/bootstrap-fritz.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

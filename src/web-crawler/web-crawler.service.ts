@@ -348,6 +348,7 @@ export class WebCrawlerService {
           `${extracted.title ?? ''} ${extracted.metaDescription ?? ''} ${extracted.textContent}`,
           keywords,
           Platform.CRAWLER,
+          { requireIdentityAnchor: true },
         );
 
         if (!match) {

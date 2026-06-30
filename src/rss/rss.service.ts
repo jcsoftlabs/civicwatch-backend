@@ -205,7 +205,9 @@ export class RssService {
           continue;
         }
 
-        const match = this.keywordMatcherService.match(combinedContent, rssKeywords, Platform.RSS);
+        const match = this.keywordMatcherService.match(combinedContent, rssKeywords, Platform.RSS, {
+          requireIdentityAnchor: true,
+        });
         if (!match) {
           continue;
         }

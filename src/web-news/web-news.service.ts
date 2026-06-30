@@ -359,6 +359,7 @@ export class WebNewsService {
                 `${result.title} ${result.summary}`,
                 keywords,
                 result.platform,
+                { requireIdentityAnchor: true },
               );
 
               if (!match) {

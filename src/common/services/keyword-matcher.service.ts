@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Keyword, Platform, Priority } from '@prisma/client';
+import { Keyword, KeywordType, Platform, Priority } from '@prisma/client';
 
 export interface KeywordMatchResult {
   matchedKeywords: string[];
   highestPriority: Priority;
   monitoredProfileId?: string;
+}
+
+interface MatchOptions {
+  requireIdentityAnchor?: boolean;
 }
 
 const PRIORITY_ORDER: Record<Priority, number> = {
@@ -14,9 +18,22 @@ const PRIORITY_ORDER: Record<Priority, number> = {
   CRITICAL: 4,
 };
 
+const IDENTITY_KEYWORD_TYPES = new Set<KeywordType>([
+  KeywordType.NAME,
+  KeywordType.ALIAS,
+  KeywordType.COMPANY,
+  KeywordType.PARTY,
+  KeywordType.HASHTAG,
+]);
+
 @Injectable()
 export class KeywordMatcherService {
-  match(content: string, keywords: Keyword[], platform?: Platform): KeywordMatchResult | null {
+  match(
+    content: string,
+    keywords: Keyword[],
+    platform?: Platform,
+    options: MatchOptions = {},
+  ): KeywordMatchResult | null {
     const normalizedContent = content.toLowerCase();
     const matches = keywords.filter((keyword) => {
       if (!keyword.active) {
@@ -36,6 +53,16 @@ export class KeywordMatcherService {
 
     if (matches.length === 0) {
       return null;
+    }
+
+    if (options.requireIdentityAnchor) {
+      const hasIdentityAnchor = matches.some((keyword) =>
+        IDENTITY_KEYWORD_TYPES.has(keyword.keywordType),
+      );
+
+      if (!hasIdentityAnchor) {
+        return null;
+      }
     }
 
     const highestPriorityKeyword = matches.reduce((highest, current) =>

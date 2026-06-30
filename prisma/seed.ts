@@ -257,6 +257,28 @@ async function main() {
         checkIntervalMinutes: 90,
         maxPagesPerRun: 15,
       },
+      {
+        organizationId: organization.id,
+        name: 'AyiboPost',
+        baseUrl: 'https://ayibopost.com',
+        startUrls: ['https://ayibopost.com'],
+        allowedDomains: ['ayibopost.com'],
+        active: false,
+        respectRobotsTxt: true,
+        checkIntervalMinutes: 90,
+        maxPagesPerRun: 15,
+      },
+      {
+        organizationId: organization.id,
+        name: 'Radio Tele Metropole',
+        baseUrl: 'https://metropole.ht',
+        startUrls: ['https://metropole.ht'],
+        allowedDomains: ['metropole.ht'],
+        active: false,
+        respectRobotsTxt: true,
+        checkIntervalMinutes: 90,
+        maxPagesPerRun: 15,
+      },
     ],
   });
 

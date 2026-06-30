@@ -40,7 +40,7 @@ async function main() {
   const organizationName = process.env.FRITZ_ORGANIZATION_NAME ?? 'Fritz William Michel';
   const organizationSlug = process.env.FRITZ_ORGANIZATION_SLUG ?? 'fritz-william-michel';
   const country = process.env.FRITZ_COUNTRY ?? 'Haiti';
-  const nickname = process.env.FRITZ_NICKNAME ?? 'Neg Kabrit Lan';
+  const nickname = process.env.FRITZ_NICKNAME ?? 'Neg Kabrit La';
   const companies = optionalCsv('FRITZ_COMPANIES', [
     'FWM Holding',
     'FWM Ventures',

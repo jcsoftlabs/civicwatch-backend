@@ -8,7 +8,7 @@ export class CrawlSchedulerService {
 
   constructor(private readonly webCrawlerService: WebCrawlerService) {}
 
-  @Cron(CronExpression.EVERY_30_MINUTES)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async processSources() {
     try {
       await this.webCrawlerService.processDueSources();

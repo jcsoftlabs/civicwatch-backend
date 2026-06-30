@@ -19,6 +19,8 @@ async function main() {
   await prisma.alert.deleteMany();
   await prisma.report.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.crawledPage.deleteMany();
+  await prisma.crawlSource.deleteMany();
   await prisma.webNewsQuery.deleteMany();
   await prisma.searchProviderConnection.deleteMany();
   await prisma.rssSource.deleteMany();
@@ -89,6 +91,21 @@ async function main() {
       platforms: [Platform.X, Platform.FACEBOOK, Platform.INSTAGRAM, Platform.WEB, Platform.RSS, Platform.NEWS],
       active: true,
     })),
+  });
+
+  await prisma.keyword.updateMany({
+    where: { organizationId: organization.id },
+    data: {
+      platforms: [
+        Platform.X,
+        Platform.FACEBOOK,
+        Platform.INSTAGRAM,
+        Platform.WEB,
+        Platform.RSS,
+        Platform.NEWS,
+        Platform.CRAWLER,
+      ],
+    },
   });
 
   await prisma.notificationChannel.createMany({
@@ -201,6 +218,44 @@ async function main() {
         country: 'HA',
         active: true,
         checkIntervalMinutes: 45,
+      },
+    ],
+  });
+
+  await prisma.crawlSource.createMany({
+    data: [
+      {
+        organizationId: organization.id,
+        name: 'Medias locaux',
+        baseUrl: 'https://lenouvelliste.com',
+        startUrls: ['https://lenouvelliste.com', 'https://satellite509.com'],
+        allowedDomains: ['lenouvelliste.com', 'satellite509.com'],
+        active: false,
+        respectRobotsTxt: true,
+        checkIntervalMinutes: 60,
+        maxPagesPerRun: 20,
+      },
+      {
+        organizationId: organization.id,
+        name: 'Sites institutionnels',
+        baseUrl: 'https://www.haitilibre.com',
+        startUrls: ['https://www.haitilibre.com'],
+        allowedDomains: ['www.haitilibre.com', 'haitilibre.com'],
+        active: false,
+        respectRobotsTxt: true,
+        checkIntervalMinutes: 60,
+        maxPagesPerRun: 20,
+      },
+      {
+        organizationId: organization.id,
+        name: 'Blogs politiques',
+        baseUrl: 'https://www.alterpresse.org',
+        startUrls: ['https://www.alterpresse.org'],
+        allowedDomains: ['www.alterpresse.org', 'alterpresse.org'],
+        active: false,
+        respectRobotsTxt: true,
+        checkIntervalMinutes: 90,
+        maxPagesPerRun: 15,
       },
     ],
   });

@@ -136,6 +136,8 @@ model Organization {
   rssSources           RssSource[]
   searchProviderConnections SearchProviderConnection[]
   webNewsQueries       WebNewsQuery[]
+  crawlSources         CrawlSource[]
+  crawledPages         CrawledPage[]
   reports              Report[]
   auditLogs            AuditLog[]
 }
@@ -321,6 +323,46 @@ model WebNewsQuery {
 
   @@index([organizationId])
   @@index([organizationId, active])
+}
+
+model CrawlSource {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  name                 String
+  baseUrl              String
+  startUrls            Json
+  allowedDomains       Json
+  active               Boolean      @default(true)
+  respectRobotsTxt     Boolean      @default(true)
+  checkIntervalMinutes Int          @default(60)
+  maxPagesPerRun       Int          @default(20)
+  lastCrawledAt        DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  crawledPages         CrawledPage[]
+
+  @@index([organizationId])
+  @@index([organizationId, active])
+}
+
+model CrawledPage {
+  id             String       @id @default(cuid())
+  organizationId String
+  crawlSourceId  String
+  url            String
+  title          String?
+  contentHash    String
+  lastSeenAt     DateTime
+  lastChangedAt  DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  crawlSource    CrawlSource  @relation(fields: [crawlSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([crawlSourceId, url])
+  @@index([organizationId])
+  @@index([crawlSourceId, lastSeenAt])
 }
 
 model AuditLog {

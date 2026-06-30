@@ -99,6 +99,14 @@ enum AlertStatus {
   ACKNOWLEDGED
 }
 
+enum SearchProvider {
+  GDELT
+  NEWS_API
+  BRAVE_SEARCH
+  SERP_API
+  CUSTOM
+}
+
 model User {
   id              String               @id @default(cuid())
   fullName        String
@@ -126,6 +134,8 @@ model Organization {
   alerts               Alert[]
   notificationChannels NotificationChannel[]
   rssSources           RssSource[]
+  searchProviderConnections SearchProviderConnection[]
+  webNewsQueries       WebNewsQuery[]
   reports              Report[]
   auditLogs            AuditLog[]
 }
@@ -268,6 +278,42 @@ model RssSource {
   websiteUrl           String?
   active               Boolean      @default(true)
   checkIntervalMinutes Int          @default(15)
+  lastCheckedAt        DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, active])
+}
+
+model SearchProviderConnection {
+  id              String         @id @default(cuid())
+  organizationId  String
+  provider        SearchProvider
+  label           String
+  apiKeyEncrypted String?
+  baseUrl         String?
+  active          Boolean        @default(true)
+  config          Json?
+  lastCheckedAt   DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, active])
+}
+
+model WebNewsQuery {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  name                 String
+  query                String
+  language             String?
+  country              String?
+  active               Boolean      @default(true)
+  checkIntervalMinutes Int          @default(30)
   lastCheckedAt        DateTime?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt

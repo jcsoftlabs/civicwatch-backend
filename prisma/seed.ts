@@ -19,6 +19,8 @@ async function main() {
   await prisma.alert.deleteMany();
   await prisma.report.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.webNewsQuery.deleteMany();
+  await prisma.searchProviderConnection.deleteMany();
   await prisma.rssSource.deleteMany();
   await prisma.keyword.deleteMany();
   await prisma.notificationChannel.deleteMany();
@@ -141,6 +143,64 @@ async function main() {
         websiteUrl: 'https://satellite509.com',
         active: false,
         checkIntervalMinutes: 30,
+      },
+    ],
+  });
+
+  await prisma.searchProviderConnection.createMany({
+    data: [
+      {
+        organizationId: organization.id,
+        provider: 'GDELT',
+        label: 'GDELT Gratuit',
+        active: true,
+        baseUrl: 'https://api.gdeltproject.org/api/v2/doc/doc',
+        config: {
+          maxRecords: 10,
+        },
+      },
+      {
+        organizationId: organization.id,
+        provider: 'NEWS_API',
+        label: 'NewsAPI (optionnel)',
+        active: false,
+        baseUrl: 'https://newsapi.org/v2/everything',
+        apiKeyEncrypted: null,
+        config: {
+          pageSize: 10,
+        },
+      },
+    ],
+  });
+
+  await prisma.webNewsQuery.createMany({
+    data: [
+      {
+        organizationId: organization.id,
+        name: 'Fritz William Michel',
+        query: '\"Fritz William Michel\"',
+        language: 'fr',
+        country: 'HA',
+        active: true,
+        checkIntervalMinutes: 30,
+      },
+      {
+        organizationId: organization.id,
+        name: 'Fritz Michel',
+        query: '\"Fritz Michel\"',
+        language: 'fr',
+        country: 'HA',
+        active: true,
+        checkIntervalMinutes: 30,
+      },
+      {
+        organizationId: organization.id,
+        name: 'FWM sujets sensibles',
+        query: '\"Fritz William Michel\" corruption scandale gouvernance',
+        language: 'fr',
+        country: 'HA',
+        active: true,
+        checkIntervalMinutes: 45,
       },
     ],
   });

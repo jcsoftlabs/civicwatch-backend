@@ -17,6 +17,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ReportsModule } from './reports/reports.module';
 import { RssModule } from './rss/rss.module';
 import { UsersModule } from './users/users.module';
+import { WebNewsModule } from './web-news/web-news.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -57,6 +58,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     DashboardModule,
     ReportsModule,
     RssModule,
+    WebNewsModule,
     AuditLogsModule,
     HealthModule,
   ],

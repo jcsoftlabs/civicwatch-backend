@@ -107,6 +107,19 @@ enum SearchProvider {
   CUSTOM
 }
 
+enum ApiConnectionPlatform {
+  X
+  META
+  INSTAGRAM
+  OTHER
+}
+
+enum ApiConnectionStatus {
+  ACTIVE
+  DISABLED
+  ERROR
+}
+
 model User {
   id              String               @id @default(cuid())
   fullName        String
@@ -134,8 +147,10 @@ model Organization {
   alerts               Alert[]
   notificationChannels NotificationChannel[]
   rssSources           RssSource[]
+  apiConnections       ApiConnection[]
   searchProviderConnections SearchProviderConnection[]
   webNewsQueries       WebNewsQuery[]
+  xSearchRules         XSearchRule[]
   crawlSources         CrawlSource[]
   crawledPages         CrawledPage[]
   reports              Report[]
@@ -280,6 +295,44 @@ model RssSource {
   websiteUrl           String?
   active               Boolean      @default(true)
   checkIntervalMinutes Int          @default(15)
+  lastCheckedAt        DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, active])
+}
+
+model ApiConnection {
+  id                   String                @id @default(cuid())
+  organizationId       String
+  platform             ApiConnectionPlatform
+  label                String
+  accessTokenEncrypted String?
+  refreshTokenEncrypted String?
+  bearerTokenEncrypted String?
+  apiKeyEncrypted      String?
+  apiSecretEncrypted   String?
+  status               ApiConnectionStatus   @default(DISABLED)
+  config               Json?
+  lastUsedAt           DateTime?
+  expiresAt            DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, platform, status])
+}
+
+model XSearchRule {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  name                 String
+  query                String
+  active               Boolean      @default(true)
+  checkIntervalMinutes Int          @default(5)
   lastCheckedAt        DateTime?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt

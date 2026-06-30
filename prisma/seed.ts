@@ -1,5 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import {
+  ApiConnectionPlatform,
+  ApiConnectionStatus,
   AlertStatus,
   AlertType,
   KeywordType,
@@ -21,6 +23,8 @@ async function main() {
   await prisma.auditLog.deleteMany();
   await prisma.crawledPage.deleteMany();
   await prisma.crawlSource.deleteMany();
+  await prisma.xSearchRule.deleteMany();
+  await prisma.apiConnection.deleteMany();
   await prisma.webNewsQuery.deleteMany();
   await prisma.searchProviderConnection.deleteMany();
   await prisma.rssSource.deleteMany();
@@ -162,6 +166,28 @@ async function main() {
         checkIntervalMinutes: 30,
       },
     ],
+  });
+
+  await prisma.apiConnection.create({
+    data: {
+      organizationId: organization.id,
+      platform: ApiConnectionPlatform.X,
+      label: 'X API (à configurer)',
+      status: ApiConnectionStatus.DISABLED,
+      config: {
+        recentSearchBaseUrl: 'https://api.x.com/2',
+      },
+    },
+  });
+
+  await prisma.xSearchRule.create({
+    data: {
+      organizationId: organization.id,
+      name: 'Fritz William Michel mentions',
+      query: '\"Fritz William Michel\" OR \"Fritz Michel\" OR \"FWM\" -is:retweet',
+      active: false,
+      checkIntervalMinutes: 5,
+    },
   });
 
   await prisma.searchProviderConnection.createMany({

@@ -1,5 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import {
+  ApiConnectionPlatform,
+  ApiConnectionStatus,
   KeywordType,
   NotificationChannelType,
   OrganizationRole,
@@ -256,6 +258,52 @@ async function main() {
       label: 'Email principal Fritz',
       destination: alertEmail,
       active: true,
+    },
+  });
+
+  await prisma.apiConnection.upsert({
+    where: {
+      id: `${organization.id}-x-connection`,
+    },
+    update: {
+      organizationId: organization.id,
+      platform: ApiConnectionPlatform.X,
+      label: 'X API (a configurer)',
+      status: ApiConnectionStatus.DISABLED,
+      config: {
+        recentSearchBaseUrl: 'https://api.x.com/2',
+      },
+    },
+    create: {
+      id: `${organization.id}-x-connection`,
+      organizationId: organization.id,
+      platform: ApiConnectionPlatform.X,
+      label: 'X API (a configurer)',
+      status: ApiConnectionStatus.DISABLED,
+      config: {
+        recentSearchBaseUrl: 'https://api.x.com/2',
+      },
+    },
+  });
+
+  await prisma.xSearchRule.upsert({
+    where: {
+      id: `${organization.id}-x-rule-primary`,
+    },
+    update: {
+      organizationId: organization.id,
+      name: 'Fritz William Michel mentions',
+      query: '\"Fritz William Michel\" OR \"Fritz Michel\" OR \"FWM\" -is:retweet',
+      active: false,
+      checkIntervalMinutes: 5,
+    },
+    create: {
+      id: `${organization.id}-x-rule-primary`,
+      organizationId: organization.id,
+      name: 'Fritz William Michel mentions',
+      query: '\"Fritz William Michel\" OR \"Fritz Michel\" OR \"FWM\" -is:retweet',
+      active: false,
+      checkIntervalMinutes: 5,
     },
   });
 

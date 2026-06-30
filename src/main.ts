@@ -18,6 +18,12 @@ function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
       return true;
     }
 
+    if (allowedOrigin.includes('*')) {
+      const escaped = allowedOrigin.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = new RegExp(`^${escaped.replace('\\*', '.*')}$`);
+      return pattern.test(origin);
+    }
+
     if (allowedOrigin.startsWith('*.')) {
       const domain = allowedOrigin.slice(2);
       return origin === `https://${domain}` || origin.endsWith(`.${domain}`);

@@ -33,6 +33,7 @@ export interface XCheckSummary {
   skippedDuplicates: number;
   matchedPosts: number;
   errors: string[];
+  status?: 'ok' | 'warning' | 'quota_exceeded' | 'auth_error';
 }
 
 @Injectable()
@@ -288,6 +289,7 @@ export class XMonitoringService {
         skippedDuplicates: 0,
         matchedPosts: 0,
         errors: ['Verification X deja en cours pour cette organisation.'],
+        status: 'warning',
       };
     }
 
@@ -302,6 +304,7 @@ export class XMonitoringService {
       skippedDuplicates: 0,
       matchedPosts: 0,
       errors: [],
+      status: 'ok',
     };
 
     try {
@@ -320,12 +323,14 @@ export class XMonitoringService {
 
       if (!connection) {
         summary.errors.push('Aucune connexion X active configuree.');
+        summary.status = 'warning';
         return summary;
       }
 
       const bearerToken = this.resolveBearerToken(connection);
       if (!bearerToken) {
         summary.errors.push('Aucun bearer token X disponible pour cette organisation.');
+        summary.status = 'warning';
         return summary;
       }
 
@@ -371,7 +376,8 @@ export class XMonitoringService {
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Erreur X API inconnue.';
-          summary.errors.push(`Rule "${rule.name}": ${message}`);
+          summary.errors.push(`Rule "${rule.name}": ${this.humanizeXError(message)}`);
+          summary.status = this.classifyErrorStatus(message, summary.status);
 
           await this.prisma.apiConnection.update({
             where: { id: connection.id },
@@ -481,6 +487,10 @@ export class XMonitoringService {
   }
 
   private sanitizeConnection(connection: ApiConnection) {
+    const config = (connection.config ?? {}) as Record<string, unknown>;
+    const envTokenAvailable = Boolean(config.useEnvBearerToken) && Boolean(process.env.X_BEARER_TOKEN);
+    const storedBearerTokenAvailable = Boolean(connection.bearerTokenEncrypted);
+
     return {
       id: connection.id,
       organizationId: connection.organizationId,
@@ -494,10 +504,13 @@ export class XMonitoringService {
       updatedAt: connection.updatedAt,
       hasAccessToken: Boolean(connection.accessTokenEncrypted),
       hasRefreshToken: Boolean(connection.refreshTokenEncrypted),
-      hasBearerToken: Boolean(connection.bearerTokenEncrypted),
+      hasBearerToken: storedBearerTokenAvailable || envTokenAvailable,
       hasApiKey: Boolean(connection.apiKeyEncrypted),
       hasApiSecret: Boolean(connection.apiSecretEncrypted),
-      maskedBearerToken: connection.bearerTokenEncrypted ? '********' : null,
+      usesEnvBearerToken: Boolean(config.useEnvBearerToken),
+      envBearerTokenAvailable: envTokenAvailable,
+      maskedBearerToken:
+        storedBearerTokenAvailable || envTokenAvailable ? '********' : null,
     };
   }
 
@@ -544,6 +557,34 @@ export class XMonitoringService {
     }
 
     return null;
+  }
+
+  private classifyErrorStatus(message: string, currentStatus: XCheckSummary['status']) {
+    if (/creditsdepleted|quota|402/i.test(message)) {
+      return 'quota_exceeded';
+    }
+
+    if (/authorization failed|invalid token|401|403/i.test(message)) {
+      return 'auth_error';
+    }
+
+    return currentStatus === 'ok' ? 'warning' : currentStatus;
+  }
+
+  private humanizeXError(message: string) {
+    if (/creditsdepleted|quota|402/i.test(message)) {
+      return 'Le compte X API n’a plus de crédits disponibles pour Recent Search.';
+    }
+
+    if (/authorization failed|invalid token|401|403/i.test(message)) {
+      return 'Le token X est invalide, expiré ou non autorisé pour cette opération.';
+    }
+
+    if (/429|rate limit/i.test(message)) {
+      return 'La limite de requêtes X a été atteinte. Réessayez plus tard.';
+    }
+
+    return message;
   }
 
   private async findActiveConnection(organizationId: string) {
